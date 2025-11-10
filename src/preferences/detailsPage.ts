@@ -52,6 +52,7 @@ const MOCK_WEATHER : Weather = {
     gusts: new Speed(14),
     windDir: new Direction(0),
     humidity: new Percentage(87),
+    aqi: 42,
     pressure: new Pressure(24),
     uvIndex: 7,
     precipitation: new RainMeasurement(0.0),

@@ -48,6 +48,7 @@ export interface Weather extends IDetails {
     windDir : Direction,
 
     humidity: Percentage;
+    aqi: number;
 
     pressure : Pressure;
 

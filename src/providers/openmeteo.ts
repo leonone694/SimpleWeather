@@ -25,6 +25,7 @@ import { getTimezoneName } from "../utils.js";
 import { Location } from "../location.js";
 
 const ENDPOINT = "https://api.open-meteo.com/v1/forecast";
+const AIR_QUALITY_ENDPOINT = "https://air-quality-api.open-meteo.com/v1/air-quality";
 
 export class OpenMeteo implements Provider {
 
@@ -71,9 +72,32 @@ export class OpenMeteo implements Provider {
         return response.body;
     }
 
+    async #fetchAirQuality(loc : Location) : Promise<any> {
+
+        const coords = await loc.latLon();
+
+        const params = {
+            latitude: String(coords.lat),
+            longitude: String(coords.lon),
+            current: "us_aqi",
+            timezone: getTimezoneName()
+        };
+
+        const response = await this.#soup.fetchJson(AIR_QUALITY_ENDPOINT, params, false);
+        if(!response.is2xx) {
+            throw new Error(
+                `Open-Meteo AQI gave status code ${response.status}. ` +
+                `Reason: ${response.body?.reason ?? "None Given"}`
+            );
+        }
+
+        return response.body;
+    }
+
     async fetchWeather() : Promise<Weather> {
         const loc = this.#config.getMainLocation();
         const body = await this.#fetch(loc);
+        const airBody = await this.#fetchAirQuality(loc);
         const cur = body.current!;
         const daily = body.daily!;
         const hourly = body.hourly!;
@@ -90,6 +114,7 @@ export class OpenMeteo implements Provider {
         const isNight = cur.is_day === 0;
         const precipitation = new RainMeasurement(cur.precipitation);
         const cloudCover = new Percentage(cur.cloud_cover);
+        const aqi = getCurrentAqi(airBody) ?? 0;
 
         const weatherCode = fixWeatherCode(cur.weather_code, cloudCover, precipitation);
         const { c: condit, i: icon } = codeToIcon[weatherCode];
@@ -156,6 +181,7 @@ export class OpenMeteo implements Provider {
             gusts,
             windDir,
             humidity,
+            aqi,
             pressure,
             uvIndex,
             precipitation,
@@ -184,6 +210,43 @@ function fixWeatherCode(code : number, cloudCover : Percentage, precip : RainMea
         else return code;
     }
     else return code;
+}
+
+function getCurrentAqi(body : any) : number | null {
+
+    if(!body || typeof body !== "object") return null;
+
+    const current = body.current;
+    if(current && typeof current.us_aqi === "number") {
+        return current.us_aqi;
+    }
+
+    const hourly = body.hourly;
+    if(!hourly) return null;
+
+    const times : string[] | undefined = hourly.time;
+    const values : (number | null)[] | undefined = hourly.us_aqi;
+    if(!Array.isArray(times) || !Array.isArray(values) || times.length !== values.length) return null;
+
+    let bestVal : number | null = null;
+    let bestDiff = Number.POSITIVE_INFINITY;
+    const now = Date.now();
+
+    for(let i = 0; i < times.length; i++) {
+        const val = values[i];
+        if(typeof val !== "number") continue;
+
+        const date = new Date(times[i]);
+        const diff = Math.abs(date.getTime() - now);
+        if(Number.isNaN(diff)) continue;
+
+        if(diff < bestDiff) {
+            bestDiff = diff;
+            bestVal = val;
+        }
+    }
+
+    return bestVal;
 }
 
 // https://open-meteo.com/en/docs#weather_variable_documentation
