@@ -1,3 +1,5 @@
+Compared to the original project, added air quality to weather data only.
+
 # SimpleWeather
 
 A highly configurable GNOME shell extension for viewing the weather.
