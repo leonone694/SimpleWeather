@@ -1,5 +1,6 @@
-Compared to the original project, added air quality to weather data only.
-
+在详细信息面板增加了AQI
+修复了中国大陆网络环境下无法搜索城市的漏洞
+增加了手动输入经纬度的功能
 # SimpleWeather
 
 A highly configurable GNOME shell extension for viewing the weather.
