@@ -21,6 +21,7 @@ import Gio from "gi://Gio";
 import Adw from "gi://Adw";
 import { gettext as _g } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
 import { WeatherProviderNames } from "../providers/provider.js";
+import { MyLocationProvider } from "../myLocation.js";
 
 function setVisibilites(value : boolean, ...widgets : Gtk.Widget[]) {
     for(let w of widgets) w.visible = value;
@@ -180,20 +181,45 @@ export class GeneralPage extends Adw.PreferencesPage {
             description: _g("Configure how your location is found")
         });
 
+        const myLocProviders = [
+            {
+                value: MyLocationProvider.IpSb,
+                label: `${_g("Online")} - ip.sb`
+            },
+            {
+                value: MyLocationProvider.IpInfoIo,
+                label: `${_g("Online")} - IPinfo`
+            },
+            {
+                value: MyLocationProvider.Ipapi,
+                label: `${_g("Online")} - ipapi.co`
+            },
+            {
+                value: MyLocationProvider.Geoclue,
+                label: `${_g("System")} - Geoclue`
+            },
+            {
+                value: MyLocationProvider.Disable,
+                label: _g("Disable")
+            }
+        ];
+
         const myLocProvs = new Gtk.StringList();
-        myLocProvs.append(`${_g("Online")} - ipapi.co`);
-        myLocProvs.append(`${_g("Online")} - IPinfo`);
-        myLocProvs.append(`${_g("System")} - Geoclue`);
-        myLocProvs.append(_g("Disable"));
-        const myLocProvFromEnum = [ 0x0, 1, 2, 3, 0 ];
+        for(const provider of myLocProviders) {
+            myLocProvs.append(provider.label);
+        }
+
+        const currentProvider = settings.get_enum("my-loc-provider");
+        const currentIndex = myLocProviders.findIndex(p => p.value === currentProvider);
+
         const myLocRow = new Adw.ComboRow({
             title: _g("Provider"),
             model: myLocProvs,
-            selected: myLocProvFromEnum[settings.get_enum("my-loc-provider")]
+            selected: currentIndex >= 0 ? currentIndex : 0
         });
         myLocRow.connect("notify::selected", () => {
-            const myLocProvToEnum = [ 4, 1, 2, 3 ];
-            settings.set_enum("my-loc-provider", myLocProvToEnum[myLocRow.selected]);
+            const selectedProvider = myLocProviders[myLocRow.selected]?.value ?? MyLocationProvider.IpSb;
+            settings.set_enum("my-loc-provider", selectedProvider);
             settings.apply();
         });
         myLocGroup.add(myLocRow);

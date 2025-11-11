@@ -131,8 +131,10 @@ export class Config {
 
     getMyLocationProvider() : MyLocationProvider {
         const val = this.#settings.get_enum("my-loc-provider");
-        if(val > 2 || val < 1) return 1;
-        else return val;
+        if(val < MyLocationProvider.IpInfoIo || val > MyLocationProvider.IpSb) {
+            return MyLocationProvider.IpInfoIo;
+        }
+        return val;
     }
 
     onMyLocationProviderChanged(callback : () => void) {

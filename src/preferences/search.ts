@@ -20,13 +20,12 @@ import Gio from "gi://Gio";
 import GObject from "gi://GObject";
 import Gtk from "gi://Gtk";
 import Pango from "gi://Pango";
-import { Location } from "../location.js";
+import { Location, parseLatLonString } from "../location.js";
 import { gettext as _g } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
 import { LibSoup } from "../libsoup.js";
 import { Config } from "../config.js";
 
-const SEARCH_BASE = "https://nominatim.openstreetmap.org";
-const SEARCH_ENDPOINT = `${SEARCH_BASE}/search`;
+const SEARCH_ENDPOINT = "https://geocoding-api.open-meteo.com/v1/search";
 
 interface SelLoc {
     // What to show on the button to clarify results
@@ -101,6 +100,28 @@ export async function searchDialog(parent : Gtk.Window, soup : LibSoup, cfg : Co
     return new Promise<Location | null>((resolve, reject) => {
 
         searchButton.connect("clicked", () => {
+            const coordsInput = searchField.text.trim();
+            const coords = parseLatLonString(coordsInput);
+            if(coords) {
+                const existingNames = cfg.getLocations().map(l => l.getName());
+                let friendlyName = coordsInput;
+                if(existingNames.includes(friendlyName)) {
+                    const baseName = friendlyName;
+                    let suffix = 2;
+                    let candidate = _g("%s (%d)").format(baseName, suffix);
+                    while(existingNames.includes(candidate)) {
+                        suffix++;
+                        candidate = _g("%s (%d)").format(baseName, suffix);
+                    }
+                    friendlyName = candidate;
+                }
+
+                const retLoc = Location.newCoords(friendlyName, coords.lat, coords.lon);
+                resolve(retLoc);
+                dialog.close();
+                return;
+            }
+
             searchButton.sensitive = false;
             const a : SearchArgs = {
                 search: searchField.text,
@@ -109,7 +130,7 @@ export async function searchDialog(parent : Gtk.Window, soup : LibSoup, cfg : Co
                 soup,
                 currentLocNames: cfg.getLocations().map(l => l.getName())
             };
-            fetchNominatim(a).then(locArr => {
+            fetchOpenMeteo(a).then(locArr => {
                 const oldLen = resultsLocList.length;
                 resultsLocList.splice(0, oldLen, ...locArr);
                 populateList(stringList, locArr);
@@ -192,85 +213,72 @@ function populateList(resultsList : Gtk.StringList, locs : SelLoc[]) {
     resultsList.splice(0, oldLen, names);
 }
 
-async function fetchNominatim(a : SearchArgs) : Promise<SelLoc[]> {
+async function fetchOpenMeteo(a : SearchArgs) : Promise<SelLoc[]> {
     const params = {
-        format: "jsonv2",
-        addressdetails: "1",
-        q: a.search
+        name: a.search,
+        count: "10"
     };
     const resp = await a.soup.fetchJson(SEARCH_ENDPOINT, params, true);
-    if(!resp.is2xx) throw new Error(`Nominatim status code ${resp.status}.`);
-    const b = resp.body;
+    if(!resp.is2xx) throw new Error(`Open-Meteo geocoding status code ${resp.status}.`);
+    const body = resp.body as OpenMeteoResponse;
+    const results = body.results ?? [];
 
-    if(!b[0]) {
+    if(results.length === 0) {
         a.licenseLabel.label = _g("No results.");
         return [ ];
     }
 
-    // British spelling of license
-    a.licenseLabel.label = b[0]?.licence ?? _g("No copyright information available.");
+    a.licenseLabel.label = _g("Geocoding by Open-Meteo (GeoNames, OSM, Wikidata, Natural Earth).");
 
     const list : SelLoc[] = [ ];
-    for(let result of b) {
-        const place = result as NominatimPlace;
-
-        const name = fixDisplayName(place);
-        const lat = parseFloat(place.lat);
-        const lon = parseFloat(place.lon);
-
-        let friendlyName = place.address.city ?? place.address.town ?? name;
-        // If a duplicate name exists use the longer one
-        if(a.currentLocNames.includes(friendlyName)) friendlyName = name;
+    for(const place of results) {
+        const buttonName = formatDisplayName(place);
+        let friendlyName = place.name;
+        if(a.currentLocNames.includes(friendlyName)) friendlyName = buttonName;
 
         list.push({
-            buttonName: name,
+            buttonName,
             friendlyName,
-            lat,
-            lon
+            lat: place.latitude,
+            lon: place.longitude
         });
     }
     return list;
 }
 
-interface NominatimPlace {
-    // British spelling
-    licence : string;
+interface OpenMeteoResponse {
+    results? : OpenMeteoPlace[];
+}
 
-    lat : string,
-    lon : string,
-    addresstype: string;
+interface OpenMeteoPlace {
     name : string;
-    display_name : string;
-    address : NominatimAddress;
+    latitude : number;
+    longitude : number;
+    country? : string;
+    country_code? : string;
+    admin1? : string;
+    admin2? : string;
+    admin3? : string;
+    admin4? : string;
 }
 
-interface NominatimAddress {
-    town? : string;
-    city? : string,
-    state? : string,
-    country : string,
-    country_code : string;
-}
+function formatDisplayName(place : OpenMeteoPlace) : string {
+    const parts : string[] = [];
+    const seen = new Set<string>();
 
-function fixDisplayName(p : NominatimPlace) : string {
-    const addr = p.address;
-    // Fix display names being weird or too long
-    switch(p.addresstype) {
-        case "city":
-            switch (addr.country_code) {
-                case "us":
-                    // American cities should be City, State, U.S.
-                    return `${addr.city}, ${addr.state}, U.S.`;
-            }
-            break;
-        case "town":
-            switch(addr.country_code) {
-                case "us":
-                    // American towns should be Town, State, U.S.
-                    return `${addr.town}, ${addr.state}, U.S.`;
-            }
-            break;
+    function pushPart(part? : string) {
+        if(!part) return;
+        if(seen.has(part)) return;
+        parts.push(part);
+        seen.add(part);
     }
 
-    return p.display_name;
+    pushPart(place.name);
+    pushPart(place.admin1);
+    pushPart(place.admin2);
+    pushPart(place.admin3);
+    pushPart(place.admin4);
+    pushPart(place.country);
+
+    return parts.join(", ");
 }

@@ -18,7 +18,20 @@
 import { gettext as _g } from "./gettext.js";
 import { getMyLocation } from "./myLocation.js";
 
-const latlonRegex = /^([0-9]+\.?[0-9]*),([0-9]+\.?[0-9]*)$/;
+const latlonRegex = /^\s*([-+]?\d+(?:\.\d+)?)\s*[,，]\s*([-+]?\d+(?:\.\d+)?)\s*$/;
+
+export function parseLatLonString(input : string) : LatLon | null {
+    const match = input.match(latlonRegex);
+    if(!match) return null;
+
+    const lat = parseFloat(match[1]);
+    const lon = parseFloat(match[2]);
+    if(Number.isNaN(lat) || Number.isNaN(lon)) return null;
+    if(lat < -90 || lat > 90) return null;
+    if(lon < -180 || lon > 180) return null;
+
+    return { lat, lon };
+}
 
 export interface LatLon {
     lat : number;
