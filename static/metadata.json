@@ -1,10 +1,10 @@
 {
     "name": "SimpleWeather",
     "description": "A highly configurable weather indicator. Doesn't use GNOME Weather.",
-    "uuid": "simple-weather@romanlefler.com",
-    "url": "https://github.com/romanlefler/SimpleWeather",
-    "settings-schema": "org.gnome.shell.extensions.simple-weather",
-    "gettext-domain": "simple-weather@romanlefler.com",
+    "uuid": "simple-weather@leonone694.com",
+    "url": "https://github.com/leonone694/SimpleWeather",
+    "settings-schema": "org.gnome.shell.extensions.leonone694.simple-weather",
+    "gettext-domain": "simple-weather@leonone694.com",
     "shell-version": [
         "46", "48", "49"
     ],

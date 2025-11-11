@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <schemalist>
-    <enum id="org.gnome.shell.extensions.simple-weather.temp-unit">
+    <enum id="org.gnome.shell.extensions.leonone694.simple-weather.temp-unit">
         <value value="1" nick="fahrenheit" />
         <value value="2" nick="celsius" />
     </enum>
-    <enum id="org.gnome.shell.extensions.simple-weather.my-loc-provider">
+    <enum id="org.gnome.shell.extensions.leonone694.simple-weather.my-loc-provider">
         <value value="1" nick="ipinfo.io" />
         <value value="2" nick="geoclue" />
         <value value="3" nick="disable" />
         <value value="4" nick="ipapi.co" />
     </enum>
-    <enum id="org.gnome.shell.extensions.simple-weather.weather-provider">
+    <enum id="org.gnome.shell.extensions.leonone694.simple-weather.weather-provider">
         <value value="1" nick="open-meteo" />
     </enum>
-    <enum id="org.gnome.shell.extensions.simple-weather.unit-preset">
+    <enum id="org.gnome.shell.extensions.leonone694.simple-weather.unit-preset">
         <value value="0" nick="custom" />
         <value value="1" nick="us" />
         <value value="2" nick="uk" />
         <value value="3" nick="metric" />
     </enum>
-    <enum id="org.gnome.shell.extensions.simple-weather.speed-unit">
+    <enum id="org.gnome.shell.extensions.leonone694.simple-weather.speed-unit">
         <value value="1" nick="mph" />
         <value value="2" nick="mps" />
         <value value="3" nick="kph" />
@@ -27,33 +27,33 @@
         <value value="5" nick="fps" />
         <value value="6" nick="beaufort" />
     </enum>
-    <enum id="org.gnome.shell.extensions.simple-weather.direction-unit">
+    <enum id="org.gnome.shell.extensions.leonone694.simple-weather.direction-unit">
         <value value="1" nick="degrees" />
         <value value="2" nick="eight-point" />
     </enum>
-    <enum id="org.gnome.shell.extensions.simple-weather.pressure-unit">
+    <enum id="org.gnome.shell.extensions.leonone694.simple-weather.pressure-unit">
         <value value="1" nick="inHg" />
         <value value="2" nick="hPa" />
         <value value="3" nick="mmHg" />
     </enum>
-    <enum id="org.gnome.shell.extensions.simple-weather.rain-measurement-unit">
+    <enum id="org.gnome.shell.extensions.leonone694.simple-weather.rain-measurement-unit">
         <value value="1" nick="in" />
         <value value="2" nick="mm" />
         <value value="3" nick="cm" />
         <value value="4" nick="pt" />
     </enum>
-    <enum id="org.gnome.shell.extensions.simple-weather.distance-unit">
+    <enum id="org.gnome.shell.extensions.leonone694.simple-weather.distance-unit">
         <value value="1" nick="mi" />
         <value value="2" nick="km" />
         <value value="3" nick="ft" />
         <value value="4" nick="meter" />
     </enum>
-    <enum id="org.gnome.shell.extensions.simple-weather.panel-box">
+    <enum id="org.gnome.shell.extensions.leonone694.simple-weather.panel-box">
         <value value="0" nick="right" />
         <value value="1" nick="center" />
         <value value="2" nick="left" />
     </enum>
-    <schema id="org.gnome.shell.extensions.simple-weather" path="/org/gnome/shell/extensions/simple-weather/">
+    <schema id="org.gnome.shell.extensions.leonone694.simple-weather" path="/org/gnome/shell/extensions/simple-weather/">
 
         <key name="is-activated" type="b">
             <default>false</default>
@@ -74,12 +74,12 @@
             <summary>Index of Primary Location</summary>
         </key>
 
-        <key name="temp-unit" enum="org.gnome.shell.extensions.simple-weather.temp-unit">
+        <key name="temp-unit" enum="org.gnome.shell.extensions.leonone694.simple-weather.temp-unit">
             <default>'celsius'</default>
             <summary>Temperature Unit</summary>
         </key>
 
-        <key name="my-loc-provider" enum="org.gnome.shell.extensions.simple-weather.my-loc-provider">
+        <key name="my-loc-provider" enum="org.gnome.shell.extensions.leonone694.simple-weather.my-loc-provider">
             <default>'ipapi.co'</default>
             <summary>My Location Provider</summary>
         </key>
@@ -94,37 +94,37 @@
             <summary>Supress dialog that says there's a bug in handling your locales</summary>
         </key>
 
-        <key name="weather-provider" enum="org.gnome.shell.extensions.simple-weather.weather-provider">
+        <key name="weather-provider" enum="org.gnome.shell.extensions.leonone694.simple-weather.weather-provider">
             <default>'open-meteo'</default>
             <summary>Weather Provider</summary>
         </key>
 
-        <key name="speed-unit" enum="org.gnome.shell.extensions.simple-weather.speed-unit">
+        <key name="speed-unit" enum="org.gnome.shell.extensions.leonone694.simple-weather.speed-unit">
             <default>'kph'</default>
             <summary>Speed Unit</summary>
         </key>
 
-        <key name="direction-unit" enum="org.gnome.shell.extensions.simple-weather.direction-unit">
+        <key name="direction-unit" enum="org.gnome.shell.extensions.leonone694.simple-weather.direction-unit">
             <default>'eight-point'</default>
             <summary>Direction Unit</summary>
         </key>
 
-        <key name="pressure-unit" enum="org.gnome.shell.extensions.simple-weather.pressure-unit">
+        <key name="pressure-unit" enum="org.gnome.shell.extensions.leonone694.simple-weather.pressure-unit">
             <default>'hPa'</default>
             <summary>Pressure Unit</summary>
         </key>
 
-        <key name="rain-measurement-unit" enum="org.gnome.shell.extensions.simple-weather.rain-measurement-unit">
+        <key name="rain-measurement-unit" enum="org.gnome.shell.extensions.leonone694.simple-weather.rain-measurement-unit">
             <default>'mm'</default>
             <summary>Rain Measurement Unit</summary>
         </key>
 
-        <key name="distance-unit" enum="org.gnome.shell.extensions.simple-weather.distance-unit">
+        <key name="distance-unit" enum="org.gnome.shell.extensions.leonone694.simple-weather.distance-unit">
             <default>'km'</default>
             <summary>Distance Unit</summary>
         </key>
 
-        <key name="unit-preset" enum="org.gnome.shell.extensions.simple-weather.unit-preset">
+        <key name="unit-preset" enum="org.gnome.shell.extensions.leonone694.simple-weather.unit-preset">
             <default>'metric'</default>
             <summary>Preset for Units</summary>
         </key>
@@ -149,7 +149,7 @@
             <summary>Current weather details in pop-up</summary>
         </key>
 
-        <key name="panel-box" enum="org.gnome.shell.extensions.simple-weather.panel-box">
+        <key name="panel-box" enum="org.gnome.shell.extensions.leonone694.simple-weather.panel-box">
             <default>'right'</default>
             <summary>Which box to put the button into in the panel</summary>
         </key>
