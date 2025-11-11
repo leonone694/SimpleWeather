@@ -20,7 +20,7 @@ import Gio from "gi://Gio";
 import GObject from "gi://GObject";
 import Gtk from "gi://Gtk";
 import Pango from "gi://Pango";
-import { Location } from "../location.js";
+import { Location, parseLatLonString } from "../location.js";
 import { gettext as _g } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
 import { LibSoup } from "../libsoup.js";
 import { Config } from "../config.js";
@@ -101,6 +101,28 @@ export async function searchDialog(parent : Gtk.Window, soup : LibSoup, cfg : Co
     return new Promise<Location | null>((resolve, reject) => {
 
         searchButton.connect("clicked", () => {
+            const coordsInput = searchField.text.trim();
+            const coords = parseLatLonString(coordsInput);
+            if(coords) {
+                const existingNames = cfg.getLocations().map(l => l.getName());
+                let friendlyName = coordsInput;
+                if(existingNames.includes(friendlyName)) {
+                    const baseName = friendlyName;
+                    let suffix = 2;
+                    let candidate = _g("%s (%d)").format(baseName, suffix);
+                    while(existingNames.includes(candidate)) {
+                        suffix++;
+                        candidate = _g("%s (%d)").format(baseName, suffix);
+                    }
+                    friendlyName = candidate;
+                }
+
+                const retLoc = Location.newCoords(friendlyName, coords.lat, coords.lon);
+                resolve(retLoc);
+                dialog.close();
+                return;
+            }
+
             searchButton.sensitive = false;
             const a : SearchArgs = {
                 search: searchField.text,

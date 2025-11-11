@@ -34,7 +34,8 @@ export enum MyLocationProvider {
     IpInfoIo = 1,
     Geoclue = 2,
     Disable = 3,
-    Ipapi = 4
+    Ipapi = 4,
+    IpSb = 5
 }
 
 export interface MyLocResult extends LatLon {
@@ -85,6 +86,9 @@ export async function getMyLocation() : Promise<MyLocResult> {
                 case MyLocationProvider.Ipapi:
                     isGettingLoc = ipapiGetLoc();
                     break;
+                case MyLocationProvider.IpSb:
+                    isGettingLoc = ipsbGetLoc();
+                    break;
                 case MyLocationProvider.Disable:
                     throw new Error("My Location Disabled");
             }
@@ -128,6 +132,26 @@ async function ipapiGetLoc() : Promise<MyLocResult> {
         lon: body.longitude,
         city: body.city ?? null,
         country: body.country_code ?? null
+    };
+}
+
+async function ipsbGetLoc() : Promise<MyLocResult> {
+    const resp = await soup.fetchJson("https://api.ip.sb/geoip", { });
+    if(!resp.is2xx) throw new Error(`api.ip.sb responded with error ${resp.status}.`);
+
+    const body = resp.body;
+    const lat = typeof body.latitude === "number" ? body.latitude : parseFloat(body.latitude);
+    const lon = typeof body.longitude === "number" ? body.longitude : parseFloat(body.longitude);
+
+    if(Number.isNaN(lat) || Number.isNaN(lon)) {
+        throw new Error("api.ip.sb response did not include valid coordinates.");
+    }
+
+    return {
+        lat,
+        lon,
+        city: body.city ?? null,
+        country: body.country_code ?? body.country ?? null
     };
 }
 
