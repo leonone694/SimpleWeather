@@ -106,7 +106,7 @@ function aqiCategory(value : number) : string {
     }
 
     if (value <= 150) {
-        return _g("Unhealthy for Sensitive Groups");
+        return _g("Unhealthy for SG");
     }
 
     if (value <= 200) {
