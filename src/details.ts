@@ -63,7 +63,7 @@ export const detailName : IDetails = {
     feelsLike: _g("Feels Like"),
     windSpeedAndDir: _g("Wind"),
     humidity: _g("Humidity"),
-    aqi: _g("Air Quality"),
+    aqi: _g("AQI"),
     gusts: _g("Gusts"),
     uvIndex: _g("UV High"),
     pressure: _g("Pressure"),
@@ -80,7 +80,10 @@ export function displayDetail(w : Weather, detail : Details, gettext : (s : stri
 
     const value = w[detail];
     let fmt: string;
-    if (typeof (value as any).display === "function") {
+    if(detail === Details.AQI && typeof value === "number") {
+        const categoryKey = aqiCategory(value);
+        fmt = `${Math.round(value)} (${realGettext(categoryKey)})`;
+    } else if (typeof (value as any).display === "function") {
         fmt = (value as Displayable).display(cfg);
     } else if(value instanceof Date) {
         fmt = displayTime(value, cfg);
@@ -91,4 +94,28 @@ export function displayDetail(w : Weather, detail : Details, gettext : (s : stri
     if(onlyValue) return fmt;
     const name = detailName[detail] as string;
     return `${realGettext(name)}: ${fmt}`;
+}
+
+function aqiCategory(value : number) : string {
+    if (value <= 50) {
+        return _g("Good");
+    }
+
+    if (value <= 100) {
+        return _g("Moderate");
+    }
+
+    if (value <= 150) {
+        return _g("Unhealthy for Sensitive Groups");
+    }
+
+    if (value <= 200) {
+        return _g("Unhealthy");
+    }
+
+    if (value <= 300) {
+        return _g("Very Unhealthy");
+    }
+
+    return _g("Hazardous");
 }
