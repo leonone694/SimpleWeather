@@ -46,7 +46,7 @@ is useful for easily sending a request.
 You have the option to use a generic user agent or an app-specific one.
 Spoofing the user agent is really not doing that much, but it still should
 be done for every call *unless the TOS of the service specifically forbids
-it (e.g. Nominatim).*
+it (e.g. some geocoding providers).* 
 
 There are many errors that can happen, so the caller should be prepared to
 do something on an error. Note that if `e instanceof Gio.ResolverError`,
