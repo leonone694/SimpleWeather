@@ -17,6 +17,7 @@
 
 // @ts-ignore - no typescript declarations for Geoclue
 import Geoclue from "gi://Geoclue";
+import GLib from "gi://GLib";
 
 import { LatLon } from "./location.js";
 import { NoLocServiceError } from "./errors.js";
@@ -29,6 +30,8 @@ let config : Config;
 let cachedMyLoc : MyLocResult | null = null;
 let isGettingLoc : Promise<MyLocResult> | null = null;
 let lastGotTime : Date = new Date(0);
+
+const MY_LOC_TIMEOUT_MS = 15_000;
 
 export enum MyLocationProvider {
     IpInfoIo = 1,
@@ -62,8 +65,39 @@ export function freeMyLocation() {
     soup = undefined;
     // @ts-ignore
     config = undefined;
+    cachedMyLoc = null;
+    isGettingLoc = null;
+    lastGotTime = new Date(0);
 }
-    
+
+function withTimeout<T>(promise : Promise<T>, timeoutMs : number, message : string) : Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+        let timeoutId : number | null = GLib.timeout_add(
+            GLib.PRIORITY_DEFAULT,
+            timeoutMs,
+            () => {
+                timeoutId = null;
+                reject(new Error(message));
+                return GLib.SOURCE_REMOVE;
+            }
+        );
+
+        promise.then(value => {
+            if(timeoutId !== null) {
+                GLib.source_remove(timeoutId);
+                timeoutId = null;
+            }
+            resolve(value);
+        }).catch(err => {
+            if(timeoutId !== null) {
+                GLib.source_remove(timeoutId);
+                timeoutId = null;
+            }
+            reject(err);
+        });
+    });
+}
+
 export async function getMyLocation() : Promise<MyLocResult> {
     if (cachedMyLoc) {
         const diffMin = (Date.now() - lastGotTime.getTime()) / 1000 / 60;
@@ -76,22 +110,31 @@ export async function getMyLocation() : Promise<MyLocResult> {
         // This allows us to not wait for two or more different
         // async requests
         if(!isGettingLoc) {
-            switch(config.getMyLocationProvider()) {
+            const provider = config.getMyLocationProvider();
+            let request : Promise<MyLocResult>;
+            switch(provider) {
                 case MyLocationProvider.IpInfoIo:
-                    isGettingLoc = ipinfoGetLoc();
+                    request = ipinfoGetLoc();
                     break;
                 case MyLocationProvider.Geoclue:
-                    isGettingLoc = geoclueGetLoc();
+                    request = geoclueGetLoc();
                     break;
                 case MyLocationProvider.Ipapi:
-                    isGettingLoc = ipapiGetLoc();
+                    request = ipapiGetLoc();
                     break;
                 case MyLocationProvider.IpSb:
-                    isGettingLoc = ipsbGetLoc();
+                    request = ipsbGetLoc();
                     break;
                 case MyLocationProvider.Disable:
                     throw new Error("My Location Disabled");
+                default:
+                    throw new Error(`Unknown My Location provider: ${provider}`);
             }
+            isGettingLoc = withTimeout(
+                request,
+                MY_LOC_TIMEOUT_MS,
+                "Timed out while retrieving My Location."
+            );
         }
 
         cachedMyLoc = await isGettingLoc;
