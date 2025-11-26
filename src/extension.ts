@@ -61,7 +61,6 @@ export default class SimpleWeatherExtension extends Extension {
     #delayFetchId? : number;
     #waitLayoutId? : number;
 
-    #resolverFailCount : number = 0;
     #indicIsErrored : boolean = false;
 
     /**
@@ -308,7 +307,7 @@ export default class SimpleWeatherExtension extends Extension {
             //
             // Fail count never resets so that if repeatedly trying to connect fails once
             // we don't constantly retry for a minute every time the timer goes off
-            if(err instanceof Gio.ResolverError && ++this.#resolverFailCount <= 1000) {
+            if(err instanceof Gio.ResolverError) {
                 this.#delayFetchId = delayTask(60, () => {
                     this.#delayFetchId = undefined;
                     this.#updateWeather();
