@@ -331,6 +331,9 @@ export default class SimpleWeatherExtension extends Extension {
 
         if(!this.#provider) throw new Error("Provider was undefined!");
         this.#cachedWeather = await this.#provider!.fetchWeather();
+        // Reset fail count on successful fetch so that future network
+        // failures (e.g., after system resume) can retry properly
+        this.#resolverFailCount = 0;
         this.#updateGui();
     }
 
